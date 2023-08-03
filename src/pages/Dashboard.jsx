@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Data
 import mockData from "../assets/data.json";
-import timestamps from "../assets/timeStamps.json";
 
 // Components
 import Dropdown from "../component/dropdown/Dropdown";
@@ -19,11 +18,39 @@ const Dashboard = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedOrderDetails, setSelectedOrderDetails] = useState({});
   const [selectedOrderTimeStamps, setSelectedOrderTimeStamps] = useState({});
-
+  const [LenghtofItems, SetLenghtofItems] = useState(0);
+  const [MatchedData, SetMatchedData] = useState(mockData.results)
+  
+  const UpdateLength = (MatchedData)=>{
+    if(mockData.results.length>0){
+      SetLenghtofItems(MatchedData.length);
+    }
+  }
+  const UpdateMockData = (searchText) => {
+    if(searchText.length<1){
+      SetMatchedData(mockData.results);
+    }
+    if (searchText.length > 0) {
+      const matchingItems = mockData.results.filter(row => row["&id"].toLocaleLowerCase() === searchText.toLocaleLowerCase());
+      const matchedData = matchingItems.map(matching => ({
+        "&id": matching["&id"],
+        "executionDetails": matching.executionDetails,
+        "bestExecutionData": matching.bestExecutionData,
+      }));
+      
+      SetMatchedData(matchedData);
+    }
+  };
+  useEffect(()=>{
+    UpdateMockData(searchText);
+  },[searchText])
+  useEffect(()=>{
+    UpdateLength(MatchedData);
+  },[MatchedData])
   return (
     <div>
       <div className={styles.header}>
-        <HeaderTitle primaryTitle="Orders" secondaryTitle="5 orders" />
+        <HeaderTitle primaryTitle="Orders" secondaryTitle={LenghtofItems+" orders"} />
         <div className={styles.actionBox}>
           <Search
             value={searchText}
@@ -47,7 +74,10 @@ const Dashboard = () => {
             title="Selected Order Timestamps"
           />
         </div>
-        <List rows={mockData.results} />
+        <List rows={MatchedData} Currency={currency} 
+              setSelectedOrderDetails={setSelectedOrderDetails} 
+              setSelectedOrderTimeStamps={setSelectedOrderTimeStamps}
+            />
       </div>
     </div>
   );
